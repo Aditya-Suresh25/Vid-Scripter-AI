@@ -46,7 +46,7 @@ const App = () => {
     }
 
     try {
-      // Securely call your backend endpoint with the full URL
+      // Use a relative path for the API endpoint
       const response = await fetch('/api/generateText', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -89,7 +89,7 @@ const App = () => {
     const prompt = `A professional, high-resolution YouTube thumbnail for a ${activeCategory} video about "${topic}". Must be eye-catching and cinematic.`;
 
     try {
-        // Securely call the new backend endpoint for Gemini
+        // Use a relative path for the API endpoint
         const response = await fetch('/api/generateImageWithGemini', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -127,7 +127,7 @@ const App = () => {
     const prompt = `Based on the following YouTube video script, generate a list of 15-20 relevant and SEO-optimized hashtags. Include a mix of broad and niche tags. Format them as a single line of text, with each tag starting with '#'.\n\nScript:\n${script}`;
     
     try {
-      // Securely call your backend endpoint with the full URL
+      // Use a relative path for the API endpoint
       const response = await fetch('/api/generateText', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -198,7 +198,7 @@ const App = () => {
 
 const Header = ({ theme, setTheme }) => (
   <header className="flex justify-between items-center">
-    <h1 className="text-3xl md:text-4xl font-bold">Vid Scripter AI 🤖</h1>
+    <h1 className="text-3xl md:text-4xl font-bold">YT Script Pro 🤖</h1>
     <ThemeSwitcher theme={theme} toggleTheme={() => setTheme(t => t === 'light' ? 'dark' : 'light')} />
   </header>
 );
