@@ -198,7 +198,7 @@ const App = () => {
 
 const Header = ({ theme, setTheme }) => (
   <header className="flex justify-between items-center">
-    <h1 className="text-3xl md:text-4xl font-bold">YT Script Pro 🤖</h1>
+    <h1 className="text-3xl md:text-4xl font-bold">Vid Scripter AI 🤖</h1>
     <ThemeSwitcher theme={theme} toggleTheme={() => setTheme(t => t === 'light' ? 'dark' : 'light')} />
   </header>
 );
