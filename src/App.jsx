@@ -47,7 +47,7 @@ const App = () => {
 
     try {
       // Use a relative path for the API endpoint
-      const response = await fetch('/api/generateText', {
+      const response = await fetch('/api/generateScript', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: prompt })
@@ -128,7 +128,7 @@ const App = () => {
     
     try {
       // Use a relative path for the API endpoint
-      const response = await fetch('/api/generateText', {
+      const response = await fetch('/api/generateHashtags', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: prompt })
