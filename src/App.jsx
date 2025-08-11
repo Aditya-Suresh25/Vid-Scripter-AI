@@ -47,7 +47,7 @@ const App = () => {
 
     try {
       // Securely call your backend endpoint with the full URL
-      const response = await fetch('http://localhost:3001/api/generateText', {
+      const response = await fetch('/api/generateText', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: prompt })
@@ -90,7 +90,7 @@ const App = () => {
 
     try {
         // Securely call the new backend endpoint for Gemini
-        const response = await fetch('http://localhost:3001/api/generateImageWithGemini', {
+        const response = await fetch('/api/generateImageWithGemini', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ prompt: prompt })
@@ -128,7 +128,7 @@ const App = () => {
     
     try {
       // Securely call your backend endpoint with the full URL
-      const response = await fetch('http://localhost:3001/api/generateText', {
+      const response = await fetch('/api/generateText', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: prompt })

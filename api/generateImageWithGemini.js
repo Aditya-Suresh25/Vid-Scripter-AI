@@ -1,41 +1,33 @@
-// Add this new route to your server/server.js file
+// In /api/generateImageWithGemini.js
+const fetch = require('node-fetch');
 
-app.post('/api/generateImageWithGemini', async (req, res) => {
-  console.log('Received request for Gemini Image Generation');
+export default async function handler(req, res) {
   const { prompt } = req.body;
   const apiKey = process.env.GOOGLE_API_KEY;
-  
-  // Note the different model and endpoint
   const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`;
 
   try {
-    // The payload structure is different for this model
     const payload = {
-      contents: [{
-        parts: [{ "text": prompt }]
-      }],
+      contents: [{ parts: [{ "text": prompt }] }],
       generationConfig: {
-        "responseModalities": ["IMAGE"]
+        "responseModalities": ["TEXT", "IMAGE"]
       },
     };
 
-    const externalApiResponse = await fetch(apiUrl, {
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
 
-    if (!externalApiResponse.ok) {
-      const errorText = await externalApiResponse.text();
-      console.error('Google API Error:', errorText);
-      throw new Error(`Google API Error: ${errorText}`);
+    if (!response.ok) {
+        const errorText = await response.text();
+        return res.status(response.status).json({ error: `Google API Error: ${errorText}` });
     }
 
-    const data = await externalApiResponse.json();
+    const data = await response.json();
     res.status(200).json(data);
-
   } catch (error) {
-    console.error('Caught error in /api/generateImageWithGemini:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: `Server error: ${error.message}` });
   }
-});
+}
