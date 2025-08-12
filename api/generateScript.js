@@ -1,10 +1,6 @@
-// In /api/generateScript.js
-const fetch = require('node-fetch');
-
 export default async function handler(req, res) {
   console.log("Function /api/generateScript started.");
 
-  // Check 1: Ensure the API key exists
   const apiKey = process.env.GOOGLE_API_KEY;
   if (!apiKey) {
     console.error("CRITICAL: GOOGLE_API_KEY environment variable not found.");
@@ -25,13 +21,11 @@ export default async function handler(req, res) {
       body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }] })
     });
 
-    // Check 2: Log the response status from Google
     console.log(`Google API response status: ${response.status}`);
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Error from Google API:", errorText);
-      // Forward a clear error message to the frontend
       return res.status(response.status).json({ error: `Google API Error: ${errorText}` });
     }
 
