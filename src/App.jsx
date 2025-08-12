@@ -198,7 +198,9 @@ const App = () => {
 
 const Header = ({ theme, setTheme }) => (
   <header className="flex justify-between items-center">
-    <h1 className="text-3xl md:text-4xl font-bold">YT Script Pro 🤖</h1>
+    {/* Use an img tag to display the logo */}
+    <img src="/logo.svg" alt="VidScript AI Logo" className="h-20" /> 
+    
     <ThemeSwitcher theme={theme} toggleTheme={() => setTheme(t => t === 'light' ? 'dark' : 'light')} />
   </header>
 );
