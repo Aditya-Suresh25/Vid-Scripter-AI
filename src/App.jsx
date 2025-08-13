@@ -12,6 +12,7 @@ const App = () => {
   const [script, setScript] = useState('');
   const [hashtags, setHashtags] = useState('');
   const [activeCategory, setActiveCategory] = useState(null);
+  const [customCategory, setCustomCategory] = useState('');
   const [topic, setTopic] = useState('');
   const [thumbnailUrl, setThumbnailUrl] = useState('');
   const [appState, setAppState] = useState('SELECT_CATEGORY'); // SELECT_CATEGORY, AWAITING_TOPIC, EDITING
@@ -22,12 +23,23 @@ const App = () => {
   }, [theme]);
 
   const handleCategorySelect = (category) => {
+    // Allow switching categories
+    setScript('');
+    setTopic('');
+    setThumbnailUrl('');
+    setHashtags('');
     setActiveCategory(category);
-    setAppState('AWAITING_TOPIC');
-    setChatHistory(prev => [...prev, 
-      { sender: 'user', text: `I'll make a "${category}" video.` },
-      { sender: 'ai', text: `Great! What is the specific topic for your ${category} video?` }
-    ]);
+
+    if (category === 'Custom') {
+        setAppState('AWAITING_TOPIC');
+        setChatHistory([{ sender: 'ai', text: 'Great! Please enter your custom category name first.' }]);
+    } else {
+        setAppState('AWAITING_TOPIC');
+        setChatHistory([
+            { sender: 'user', text: `I'll make a "${category}" video.` },
+            { sender: 'ai', text: `Awesome! What is the specific topic for your ${category} video?` }
+        ]);
+    }
   };
 
   const submitUserMessage = useCallback(async (userInput) => {
@@ -38,16 +50,26 @@ const App = () => {
     setIsLoading(true);
 
     let prompt;
+    let currentCategory = activeCategory === 'Custom' ? customCategory : activeCategory;
+
     if (appState === 'AWAITING_TOPIC') {
+        if(activeCategory === 'Custom' && !customCategory) {
+            setCustomCategory(userInput);
+            setChatHistory(prev => [...prev, { sender: 'ai', text: `Custom category set to "${userInput}". Now, what's the video topic?` }]);
+            setIsLoading(false);
+            return;
+        }
       setTopic(userInput);
-      prompt = `Generate a comprehensive YouTube video script for the category: "${activeCategory}" on the topic: "${userInput}". The script should include a catchy intro, detailed main content with multiple points, and a compelling outro with a call to action.`;
+      currentCategory = activeCategory === 'Custom' ? customCategory || userInput : activeCategory;
+      prompt = `Generate a comprehensive YouTube video script for the category: "${currentCategory}" on the topic: "${userInput}". The script should include a catchy intro, detailed main content with multiple points, and a compelling outro with a call to action.`;
     } else { // 'EDITING' state
+      // Update topic if user seems to be changing it
+      setTopic(prevTopic => `${prevTopic} (${userInput})`); 
       prompt = `Based on the previous script and conversation, refine the script with the following instruction: "${userInput}".\n\nPrevious Script:\n${script}`;
     }
 
     try {
-      // Use a relative path for the API endpoint
-      const response = await fetch('/api/generateScript', {
+      const response = await fetch('/api/generateText', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: prompt })
@@ -64,11 +86,11 @@ const App = () => {
         const generatedText = result.candidates[0].content.parts[0].text;
         setScript(generatedText);
         const aiMessage = { sender: 'ai', text: generatedText };
-        const followUpMessage = { sender: 'ai', text: "Here's the updated script. You can now generate a thumbnail, get hashtags, or ask me to refine the script further." };
+        const followUpMessage = { sender: 'ai', text: "Here's the updated script. You can now generate a thumbnail, get hashtags, or ask me to refine it further." };
         setChatHistory(prev => [...prev, aiMessage, followUpMessage]);
         setAppState('EDITING');
       } else {
-        const errorMessage = { sender: 'ai', text: 'Sorry, I had trouble generating a script. The model returned an unexpected response.' };
+        const errorMessage = { sender: 'ai', text: 'Sorry, I had trouble generating a script.' };
         setChatHistory(prev => [...prev, errorMessage]);
       }
     } catch (error) {
@@ -78,18 +100,17 @@ const App = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [script, appState, activeCategory, chatHistory]);
+  }, [script, appState, activeCategory, customCategory, chatHistory]);
 
   const generateThumbnail = useCallback(async () => {
     if (!topic) return;
     setIsThumbnailLoading(true);
     setThumbnailUrl('');
 
-    // A prompt suitable for Gemini image generation
-    const prompt = `A professional, high-resolution YouTube thumbnail for a ${activeCategory} video about "${topic}". Must be eye-catching and cinematic.`;
+    const currentCategory = activeCategory === 'Custom' ? customCategory : activeCategory;
+    const prompt = `A professional, high-resolution YouTube thumbnail for a ${currentCategory} video about "${topic}". Must be eye-catching and cinematic.`;
 
     try {
-        // Use a relative path for the API endpoint
         const response = await fetch('/api/generateImageWithGemini', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -102,7 +123,6 @@ const App = () => {
         }
 
         const result = await response.json();
-        // Adjust parsing for the generateContent response structure
         const base64Data = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
 
         if (base64Data) {
@@ -110,7 +130,7 @@ const App = () => {
           setThumbnailUrl(imageUrl);
         } else {
           console.error("Failed to generate thumbnail with Gemini:", result);
-          setChatHistory(prev => [...prev, {sender: 'ai', text: 'Sorry, I couldn\'t generate a thumbnail with Gemini. The model returned an unexpected response.'}]);
+          setChatHistory(prev => [...prev, {sender: 'ai', text: 'Sorry, I couldn\'t generate a thumbnail.'}]);
         }
     } catch (error) {
         console.error("Error generating thumbnail:", error);
@@ -118,7 +138,7 @@ const App = () => {
     } finally {
         setIsThumbnailLoading(false);
     }
-  }, [topic, activeCategory]);
+  }, [topic, activeCategory, customCategory]);
 
   const generateHashtags = useCallback(async () => {
     if (!script) return;
@@ -127,8 +147,7 @@ const App = () => {
     const prompt = `Based on the following YouTube video script, generate a list of 15-20 relevant and SEO-optimized hashtags. Include a mix of broad and niche tags. Format them as a single line of text, with each tag starting with '#'.\n\nScript:\n${script}`;
     
     try {
-      // Use a relative path for the API endpoint
-      const response = await fetch('/api/generateHashtags', {
+      const response = await fetch('/api/generateText', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: prompt })
@@ -167,6 +186,8 @@ const App = () => {
             bubbleTheme={bubbleTheme}
             setBubbleTheme={setBubbleTheme}
             theme={theme}
+            customCategory={customCategory}
+            setCustomCategory={setCustomCategory}
           />
           <div className="md:col-span-2 flex flex-col h-[85vh]">
             <ChatWindow chatHistory={chatHistory} bubbleTheme={bubbleTheme} isLoading={isLoading} />
@@ -186,7 +207,7 @@ const App = () => {
                     theme={theme}
                  />
             </div>
-            <ChatInput onSendMessage={submitUserMessage} isLoading={isLoading} appState={appState} />
+            <ChatInput onSendMessage={submitUserMessage} isLoading={isLoading} appState={appState} activeCategory={activeCategory} customCategory={customCategory} />
           </div>
         </main>
       </div>
@@ -198,9 +219,7 @@ const App = () => {
 
 const Header = ({ theme, setTheme }) => (
   <header className="flex justify-between items-center">
-    {/* Use an img tag to display the logo */}
-    <img src="/logo.svg" alt="VidScript AI Logo" className="h-20" /> 
-    
+    <img src="/logo.svg" alt="VidScript AI Logo" className="h-12" />
     <ThemeSwitcher theme={theme} toggleTheme={() => setTheme(t => t === 'light' ? 'dark' : 'light')} />
   </header>
 );
@@ -211,8 +230,8 @@ const ThemeSwitcher = ({ theme, toggleTheme }) => (
   </button>
 );
 
-const Sidebar = ({ isLoading, activeCategory, onCategorySelect, appState, bubbleTheme, setBubbleTheme, theme }) => {
-    const categories = ['Tech', 'Gaming', 'Vlogging', 'Educational', 'Comedy', 'DIY'];
+const Sidebar = ({ isLoading, activeCategory, onCategorySelect, bubbleTheme, setBubbleTheme, theme }) => {
+    const categories = ['Tech', 'Gaming', 'Vlogging', 'Educational', 'Comedy', 'DIY', 'Custom'];
     const bubbleColors = {
         blue: { user: 'bg-blue-500', ai: 'bg-blue-700' },
         green: { user: 'bg-green-500', ai: 'bg-green-700' },
@@ -229,7 +248,7 @@ const Sidebar = ({ isLoading, activeCategory, onCategorySelect, appState, bubble
                         <button
                             key={cat}
                             onClick={() => onCategorySelect(cat)}
-                            disabled={isLoading || appState !== 'SELECT_CATEGORY'}
+                            disabled={isLoading}
                             className={`p-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${activeCategory === cat ? 'bg-indigo-600 text-white shadow-lg' : (theme === 'dark' ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-200 shadow-sm')}`}
                         >
                             {cat}
@@ -382,7 +401,7 @@ const HashtagGenerator = ({ onGenerate, hashtags, isLoading, appState, theme }) 
     );
 };
 
-const ChatInput = ({ onSendMessage, isLoading, appState }) => {
+const ChatInput = ({ onSendMessage, isLoading, appState, activeCategory, customCategory }) => {
     const [input, setInput] = useState('');
     const isDisabled = isLoading || appState === 'SELECT_CATEGORY';
 
@@ -394,6 +413,7 @@ const ChatInput = ({ onSendMessage, isLoading, appState }) => {
 
     const getPlaceholder = () => {
         if (appState === 'SELECT_CATEGORY') return 'Select a category to begin...';
+        if (activeCategory === 'Custom' && !customCategory) return 'Enter your custom category name...';
         if (appState === 'AWAITING_TOPIC') return 'Enter your video topic here...';
         return 'Describe the changes you want...';
     };
