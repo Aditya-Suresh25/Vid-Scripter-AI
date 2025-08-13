@@ -438,6 +438,13 @@ const ChatInput = ({ onSendMessage, isLoading, appState, activeCategory, customC
         setInput('');
     };
 
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter' && !isDisabled) {
+            onSendMessage(input);
+            setInput('');
+        }
+    };
+
     const getPlaceholder = () => {
         if (appState === 'SELECT_CATEGORY') return 'Select a category to begin...';
         if (activeCategory === 'Custom' && !customCategory) return 'Enter your custom category name...';
@@ -447,21 +454,165 @@ const ChatInput = ({ onSendMessage, isLoading, appState, activeCategory, customC
 
     return (
         <form onSubmit={handleSubmit} className="mt-auto pt-4">
-            <div className="relative glowing-border">
-                <div className="flex items-center p-2 rounded-lg border border-transparent dark:bg-gray-700 bg-gray-100 relative z-10">
+            <div className="mt-auto pt-4">
+            <style jsx>{`
+                @keyframes rainbow-glow {
+                    0% { 
+                        background-position: 0% 50%;
+                        box-shadow: 0 0 30px rgba(255, 107, 53, 0.4),
+                                   0 0 60px rgba(255, 107, 53, 0.2),
+                                   0 0 90px rgba(255, 107, 53, 0.1);
+                    }
+                    16.66% { 
+                        background-position: 16.66% 50%;
+                        box-shadow: 0 0 30px rgba(247, 147, 30, 0.4),
+                                   0 0 60px rgba(247, 147, 30, 0.2),
+                                   0 0 90px rgba(247, 147, 30, 0.1);
+                    }
+                    33.33% { 
+                        background-position: 33.33% 50%;
+                        box-shadow: 0 0 30px rgba(255, 215, 0, 0.4),
+                                   0 0 60px rgba(255, 215, 0, 0.2),
+                                   0 0 90px rgba(255, 215, 0, 0.1);
+                    }
+                    50% { 
+                        background-position: 50% 50%;
+                        box-shadow: 0 0 30px rgba(50, 205, 50, 0.4),
+                                   0 0 60px rgba(50, 205, 50, 0.2),
+                                   0 0 90px rgba(50, 205, 50, 0.1);
+                    }
+                    66.66% { 
+                        background-position: 66.66% 50%;
+                        box-shadow: 0 0 30px rgba(0, 191, 255, 0.4),
+                                   0 0 60px rgba(0, 191, 255, 0.2),
+                                   0 0 90px rgba(0, 191, 255, 0.1);
+                    }
+                    83.33% { 
+                        background-position: 83.33% 50%;
+                        box-shadow: 0 0 30px rgba(65, 105, 225, 0.4),
+                                   0 0 60px rgba(65, 105, 225, 0.2),
+                                   0 0 90px rgba(65, 105, 225, 0.1);
+                    }
+                    100% { 
+                        background-position: 100% 50%;
+                        box-shadow: 0 0 30px rgba(138, 43, 226, 0.4),
+                                   0 0 60px rgba(138, 43, 226, 0.2),
+                                   0 0 90px rgba(138, 43, 226, 0.1);
+                    }
+                }
+                
+                .rainbow-border {
+                    position: relative;
+                    padding: 2px;
+                    border-radius: 50px;
+                    background: linear-gradient(
+                        90deg,
+                        #ff6b35 0%,
+                        #f7931e 14.28%,
+                        #ffd700 28.57%,
+                        #32cd32 42.86%,
+                        #00bfff 57.14%,
+                        #4169e1 71.43%,
+                        #8a2be2 85.71%,
+                        #ff1493 100%
+                    );
+                    background-size: 400% 100%;
+                    animation: rainbow-glow 4s ease-in-out infinite;
+                }
+                
+                .input-container {
+                    background: #1a1a1a;
+                    border-radius: 50px;
+                    backdrop-filter: blur(20px);
+                    border: none;
+                    position: relative;
+                    overflow: hidden;
+                }
+                
+                .input-container::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+                    border-radius: 50px;
+                    pointer-events: none;
+                }
+                
+                .custom-input {
+                    background: transparent;
+                    border: none;
+                    outline: none;
+                    color: white;
+                    font-size: 16px;
+                    font-weight: 400;
+                }
+                
+                .custom-input::placeholder {
+                    color: rgba(255, 255, 255, 0.5);
+                    font-weight: 300;
+                }
+                
+                .custom-input:focus::placeholder {
+                    color: rgba(255, 255, 255, 0.3);
+                }
+                
+                .send-button {
+                    background: transparent;
+                    border: none;
+                    color: rgba(255, 255, 255, 0.7);
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    padding: 8px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                
+                .send-button:hover:not(:disabled) {
+                    background: rgba(255, 255, 255, 0.1);
+                    color: white;
+                    transform: scale(1.05);
+                }
+                
+                .send-button:disabled {
+                    opacity: 0.4;
+                    cursor: not-allowed;
+                }
+            `}</style>
+            <div className="rainbow-border">
+                <div className="input-container flex items-center py-3 px-6">
                     <input
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
+                        onKeyPress={handleKeyPress}
                         disabled={isDisabled}
                         placeholder={getPlaceholder()}
-                        className="flex-grow bg-transparent focus:outline-none px-2"
+                        className="custom-input flex-grow mr-3"
                     />
-                    <button type="submit" disabled={isDisabled} className="p-2 bg-indigo-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-indigo-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    <button 
+                        type="button"
+                        onClick={() => {
+                            if (!isDisabled) {
+                                onSendMessage(input);
+                                setInput('');
+                            }
+                        }}
+                        disabled={isDisabled} 
+                        className="send-button"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M5 12h14"/>
+                            <path d="m12 5 7 7-7 7"/>
+                        </svg>
                     </button>
                 </div>
             </div>
+        </div>
         </form>
     );
 };
