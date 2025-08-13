@@ -69,7 +69,7 @@ const App = () => {
     }
 
     try {
-      const response = await fetch('/api/generateText', {
+      const response = await fetch('/api/generateScript', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: prompt })
@@ -147,7 +147,7 @@ const App = () => {
     const prompt = `Based on the following YouTube video script, generate a list of 15-20 relevant and SEO-optimized hashtags. Include a mix of broad and niche tags. Format them as a single line of text, with each tag starting with '#'.\n\nScript:\n${script}`;
     
     try {
-      const response = await fetch('/api/generateText', {
+      const response = await fetch('/api/generateHashtags', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: prompt })
@@ -175,6 +175,33 @@ const App = () => {
 
   return (
     <div className={`min-h-screen font-sans transition-colors duration-500 ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+      {/* Add styles for the glowing border animation */}
+      <style>{`
+        @keyframes glowing {
+          0% { background-position: 0 0; }
+          50% { background-position: 400% 0; }
+          100% { background-position: 0 0; }
+        }
+        .glowing-border::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          border-radius: 0.75rem; /* 12px */
+          border: 2px solid transparent;
+          background: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000) border-box;
+          background-size: 400%;
+          -webkit-mask: 
+             linear-gradient(#fff 0 0) content-box, 
+             linear-gradient(#fff 0 0);
+          -webkit-mask-composite: destination-out;
+          mask-composite: exclude;
+          animation: glowing 10s linear infinite;
+          pointer-events: none;
+        }
+      `}</style>
       <div className="container mx-auto p-4 md:p-8">
         <Header theme={theme} setTheme={setTheme} />
         <main className="grid md:grid-cols-3 gap-8 mt-8">
@@ -420,18 +447,20 @@ const ChatInput = ({ onSendMessage, isLoading, appState, activeCategory, customC
 
     return (
         <form onSubmit={handleSubmit} className="mt-auto pt-4">
-            <div className="flex items-center p-2 rounded-lg border dark:border-gray-600 dark:bg-gray-700 bg-gray-100">
-                <input
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    disabled={isDisabled}
-                    placeholder={getPlaceholder()}
-                    className="flex-grow bg-transparent focus:outline-none px-2"
-                />
-                <button type="submit" disabled={isDisabled} className="p-2 bg-indigo-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-indigo-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                </button>
+            <div className="relative glowing-border">
+                <div className="flex items-center p-2 rounded-lg border border-transparent dark:bg-gray-700 bg-gray-100 relative z-10">
+                    <input
+                        type="text"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        disabled={isDisabled}
+                        placeholder={getPlaceholder()}
+                        className="flex-grow bg-transparent focus:outline-none px-2"
+                    />
+                    <button type="submit" disabled={isDisabled} className="p-2 bg-indigo-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-indigo-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </button>
+                </div>
             </div>
         </form>
     );
